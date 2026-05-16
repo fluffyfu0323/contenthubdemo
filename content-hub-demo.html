@@ -1566,16 +1566,15 @@ const COLLECTIONS = [
     color: '#d35400'
   },
   {
-    id: 'sanxingdui',
-    title: '千年三星堆',
-    subtitle: '四川广汉 · 古蜀文明',
-    description: '三星堆遗址出土的青铜面具、黄金权杖与神树，揭示了3000年前古蜀王国神秘而辉煌的青铜文明。',
-    cover: 'sanxingdui-cover.png',
-    searchQueries: ['Sanxingdui', 'Shu kingdom', 'bronze mask'],
-    geoHint: 'China',
-    tags: ['三星堆', '古蜀文明', '青铜面具', '黄金面具'],
-    color: '#c8860a',
-    externalUrl: 'https://fluffyfu0323.github.io/sanxingdui-showcase/'
+    id: 'silk-road',
+    title: '丝路遗珍',
+    subtitle: '长安 → 撒马尔罕 → 君士坦丁堡',
+    description: '丝绸之路上的文明交汇——从唐三彩到波斯细密画、从中亚织锦到拜占庭金器，东西方审美在此碰撞融合。',
+    coverObjectId: 39918,
+    searchQueries: ['Tang dynasty', 'silk road', 'Persian miniature', 'Sogdian', 'Central Asian', 'Sassanian'],
+    geoHint: '',
+    tags: ['丝绸之路', '唐代', '波斯', '中亚'],
+    color: '#8e44ad'
   },
   {
     id: 'edo-ukiyo',
@@ -1687,11 +1686,6 @@ function renderCollections() {
 async function openCollection(id) {
   const col = COLLECTIONS.find(c => c.id === id);
   if (!col) return;
-  // 如果合集配置了外部链接，直接跳转
-  if (col.externalUrl) {
-    window.open(col.externalUrl, '_blank');
-    return;
-  }
   collState.current = col;
   collState.currentPage = 1;
   collState.objectIDs = [];
