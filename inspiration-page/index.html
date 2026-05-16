@@ -33,6 +33,12 @@
       <span class="logo-sub">Inspiration Explorer</span>
     </div>
     <nav class="header-nav">
+      <div class="view-switcher">
+        <button class="view-btn active" data-view="explore">🌐 探索</button>
+        <button class="view-btn" data-view="overview">📊 全景</button>
+        <button class="view-btn" data-view="deepdive">🔍 深潜</button>
+        <div class="nav-glider"></div>
+      </div>
       <button class="header-back" onclick="window.location.href='../content-hub-demo.html'" title="返回内容力专区">
         ← 返回 Content Hub
       </button>
@@ -66,6 +72,26 @@
     <aside class="info-panel" id="infoPanel">
       <!-- 由 panel.js 渲染 -->
     </aside>
+
+    <!-- ===== Overview 全景模式（占位） ===== -->
+    <div class="view-overview-container" id="overviewContainer">
+      <div class="view-placeholder">
+        <div class="view-placeholder-icon">📊</div>
+        <h2 class="view-placeholder-title">全景模式</h2>
+        <p class="view-placeholder-desc">统计仪表盘 · 文化关系网络 · 数据全貌</p>
+        <span class="view-placeholder-badge">即将上线</span>
+      </div>
+    </div>
+
+    <!-- ===== Deep Dive 深潜模式（占位） ===== -->
+    <div class="view-deepdive-container" id="deepdiveContainer">
+      <div class="view-placeholder">
+        <div class="view-placeholder-icon">🔍</div>
+        <h2 class="view-placeholder-title">深潜模式</h2>
+        <p class="view-placeholder-desc">瀑布流画廊 · 沉浸浏览 · 灵感收藏</p>
+        <span class="view-placeholder-badge">即将上线</span>
+      </div>
+    </div>
 
   </div>
 

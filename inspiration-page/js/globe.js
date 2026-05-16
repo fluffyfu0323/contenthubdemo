@@ -711,6 +711,25 @@ export class GlobeModule {
     window.addEventListener('resize', this._resizeHandler);
   }
 
+  // ---------- 暂停/恢复渲染（视图切换用） ----------
+  pause() {
+    if (this._rafId) {
+      cancelAnimationFrame(this._rafId);
+      this._rafId = null;
+      this._paused = true;
+      console.log('[Globe] 渲染已暂停');
+    }
+  }
+
+  resume() {
+    if (this._paused) {
+      this._paused = false;
+      this._clock.getDelta(); // 消耗掉暂停期间的 delta 时间
+      this._animate();
+      console.log('[Globe] 渲染已恢复');
+    }
+  }
+
   // ---------- 主动画循环 ----------
   _animate() {
     this._rafId = requestAnimationFrame(() => this._animate());

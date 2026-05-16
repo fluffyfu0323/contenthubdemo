@@ -22,6 +22,7 @@ class InspirationExplorer {
     this.loadingEl = null;
     this._currentPeriodKey = null;
     this._currentAssets = [];
+    this._currentView = 'explore';
   }
 
   async init() {
@@ -63,7 +64,10 @@ class InspirationExplorer {
     // 4. 绑定事件
     this._bindEvents();
 
-    // 5. 初始色
+    // 5. 初始化视图切换导航
+    this._initViewSwitcher();
+
+    // 6. 初始色
     this._updatePeriodColor(this.timeline.getActivePeriod().color);
 
     console.log('[InspirationExplorer] 初始化完成，等待 Met 数据加载');
@@ -184,6 +188,61 @@ class InspirationExplorer {
         this.globe.flyTo(asset.lat, asset.lng, 1200, 10);
       }
     };
+  }
+
+  /* ===== 视图切换 ===== */
+  _initViewSwitcher() {
+    const btns = document.querySelectorAll('.view-btn');
+    const glider = document.querySelector('.nav-glider');
+    if (!btns.length || !glider) return;
+
+    // 初始化滑块位置
+    const activeBtn = document.querySelector('.view-btn.active');
+    if (activeBtn) {
+      requestAnimationFrame(() => this._moveGlider(glider, activeBtn));
+    }
+
+    btns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.classList.contains('active')) return;
+        btns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this._moveGlider(glider, btn);
+        this._switchView(btn.dataset.view);
+      });
+    });
+
+    // 窗口 resize 时重新定位滑块
+    window.addEventListener('resize', () => {
+      const current = document.querySelector('.view-btn.active');
+      if (current) this._moveGlider(glider, current);
+    });
+  }
+
+  _moveGlider(glider, targetBtn) {
+    glider.style.left = targetBtn.offsetLeft + 'px';
+    glider.style.width = targetBtn.offsetWidth + 'px';
+  }
+
+  _switchView(viewName) {
+    if (this._currentView === viewName) return;
+    this._currentView = viewName;
+
+    const layout = document.querySelector('.app-layout');
+    layout.classList.remove('view-explore', 'view-overview', 'view-deepdive');
+
+    if (viewName !== 'explore') {
+      layout.classList.add(`view-${viewName}`);
+    }
+
+    // 切到非探索模式时暂停地球渲染以节省性能
+    if (viewName === 'explore') {
+      this.globe?.resume?.();
+    } else {
+      this.globe?.pause?.();
+    }
+
+    console.log(`[View] 切换到: ${viewName}`);
   }
 }
 
