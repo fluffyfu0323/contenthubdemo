@@ -221,15 +221,15 @@ export class DeepDiveModule {
     this.earth.add(atmo);
   }
 
-  // 标记点 — 在一些关键文化位置放置光点
+  // 标记点 — 在关键文化位置放置光点
   _createMarkers() {
     const markers = [
       { lat: 31, lng: 104, name: '三星堆' },       // 四川
       { lat: 29.3, lng: 117.2, name: '景德镇' },   // 江西
       { lat: 27.7, lng: 109, name: '傩戏' },       // 贵州
-      { lat: 60, lng: 10, name: '维京' },          // 挪威
-      { lat: -41, lng: 174, name: '毛利' },        // 新西兰
-      { lat: 35, lng: -105, name: '牛仔' },        // 美国西部
+      { lat: 40.0, lng: 94.8, name: '敦煌' },      // 甘肃敦煌
+      { lat: 35.7, lng: 139.7, name: '浮世绘' },   // 日本东京
+      { lat: 32.7, lng: 53.7, name: '波斯地毯' },  // 伊朗
     ];
 
     markers.forEach(m => {
