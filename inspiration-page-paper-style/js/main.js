@@ -7,6 +7,7 @@ import { GlobeModule } from './globe.js';
 import { TimelineModule } from './timeline.js';
 import { PanelModule } from './panel.js';
 import { TIME_PERIODS, getPeriodConfig, getCachedAssetsForPeriod } from './data.js';
+import { DeepDiveModule, drawChart } from './deepdive.js';
 
 class InspirationExplorerPaper {
   constructor() {
@@ -57,7 +58,10 @@ class InspirationExplorerPaper {
     // 4. 绑定事件
     this._bindEvents();
 
-    // 5. 初始色
+    // 5. 初始化视图切换导航
+    this._initViewSwitcher();
+
+    // 6. 初始色
     this._updatePeriodColor(this.timeline.getActivePeriod().color);
 
     console.log('[Paper Style] 初始化完成');
@@ -146,6 +150,76 @@ class InspirationExplorerPaper {
         this.globe.flyTo(asset.lat, asset.lng, 1200, 10);
       }
     };
+  }
+
+  /* ===== 视图切换 ===== */
+  _initViewSwitcher() {
+    this._currentView = 'explore';
+    const btns = document.querySelectorAll('.view-btn');
+    const glider = document.querySelector('.nav-glider');
+    if (!btns.length || !glider) return;
+
+    const activeBtn = document.querySelector('.view-btn.active');
+    if (activeBtn) {
+      requestAnimationFrame(() => this._moveGlider(glider, activeBtn));
+    }
+
+    btns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.classList.contains('active')) return;
+        btns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this._moveGlider(glider, btn);
+        this._switchView(btn.dataset.view);
+      });
+    });
+
+    window.addEventListener('resize', () => {
+      const current = document.querySelector('.view-btn.active');
+      if (current) this._moveGlider(glider, current);
+    });
+  }
+
+  _moveGlider(glider, targetBtn) {
+    glider.style.left = targetBtn.offsetLeft + 'px';
+    glider.style.width = targetBtn.offsetWidth + 'px';
+  }
+
+  _switchView(viewName) {
+    if (this._currentView === viewName) return;
+    this._currentView = viewName;
+
+    const layout = document.querySelector('.app-layout');
+    layout.classList.remove('view-explore', 'view-overview', 'view-deepdive');
+
+    if (viewName !== 'explore') {
+      layout.classList.add(`view-${viewName}`);
+    }
+
+    if (viewName === 'explore') {
+      this.globe?.resume?.();
+      this._ddModule?.pause?.();
+    } else if (viewName === 'deepdive') {
+      this.globe?.pause?.();
+      this._initDeepDive();
+    } else {
+      this.globe?.pause?.();
+      this._ddModule?.pause?.();
+    }
+  }
+
+  async _initDeepDive() {
+    if (!this._ddModule) {
+      const container = document.getElementById('ddGlobeContainer');
+      if (container) {
+        this._ddModule = new DeepDiveModule(container);
+        await this._ddModule.init();
+      }
+      // 绘制折线图
+      setTimeout(() => drawChart('ddChart'), 100);
+    } else {
+      this._ddModule.resume();
+    }
   }
 }
 
