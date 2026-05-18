@@ -34,8 +34,9 @@ export class DeepDiveModule {
     this.isAutoRotating = true;
     this.lastInteraction = 0;
     this.mouse = { prevX: 0, prevY: 0 };
-    this.yRotation = -0.8;  // 只绕Y轴旋转（经度方向），初始展示欧亚非
-    this.earthOffset = new THREE.Vector3(6, -2, 0); // 大幅偏右偏下
+    this.yRotation = -0.8;  // Y轴旋转，初始展示欧亚非
+    this.xRotation = 0;     // X轴旋转
+    this.earthOffset = new THREE.Vector3(2, -1, 0); // 地球位置靠近中心
 
     this._rafId = null;
     this._clock = new THREE.Clock();
@@ -99,6 +100,13 @@ export class DeepDiveModule {
     const R = CONFIG.earthRadius;
     const seg = CONFIG.earthSegments;
 
+    // 用一个父 Group 来做固定倾斜，地球本体只绕自身 Y 轴旋转
+    this.earthPivot = new THREE.Group();
+    this.earthPivot.position.copy(this.earthOffset);
+    // 北极朝右上倾斜：绕 Z 轴旋转约 -23度
+    this.earthPivot.rotation.z = CONFIG.tiltAngle;
+    this.scene.add(this.earthPivot);
+
     // 基底球
     const baseGeo = new THREE.SphereGeometry(R, seg, seg);
     const baseMat = new THREE.MeshPhongMaterial({
@@ -106,8 +114,7 @@ export class DeepDiveModule {
       specular: 0x000000, shininess: 0,
     });
     this.earth = new THREE.Mesh(baseGeo, baseMat);
-    this.earth.position.copy(this.earthOffset); // 偏移，让半球充满画面
-    this.scene.add(this.earth);
+    this.earthPivot.add(this.earth);
 
     this.landGroup = new THREE.Group();
     this.earth.add(this.landGroup);
@@ -276,15 +283,20 @@ export class DeepDiveModule {
       this.isAutoRotating = false;
       this.lastInteraction = Date.now();
       this.mouse.prevX = e.clientX;
+      this.mouse.prevY = e.clientY;
       el.setPointerCapture(e.pointerId);
     });
 
     el.addEventListener('pointermove', (e) => {
       if (!this.isDragging) return;
       const dx = e.clientX - this.mouse.prevX;
-      // 只绕 Y 轴旋转（南极到北极那条轴）
+      const dy = e.clientY - this.mouse.prevY;
+      // 360度自由旋转
       this.yRotation += dx * 0.004;
+      this.xRotation += dy * 0.004;
+      this.xRotation = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.xRotation));
       this.mouse.prevX = e.clientX;
+      this.mouse.prevY = e.clientY;
       this.lastInteraction = Date.now();
     });
 
@@ -320,11 +332,10 @@ export class DeepDiveModule {
     }
     if (this.isAutoRotating) this.yRotation += CONFIG.autoRotateSpeed;
 
-    // 应用旋转：固定 tilt 倾斜 + 只绕 Y 轴旋转
+    // 只绕 Y 轴旋转（极轴），倾斜由 earthPivot 固定
     if (this.earth) {
-      this.earth.rotation.z = CONFIG.tiltAngle;  // 向右倾斜
-      this.earth.rotation.y = this.yRotation;    // 只绕极轴旋转
-      this.earth.rotation.x = 0.15;             // 微微俯视
+      this.earth.rotation.x = this.xRotation;
+      this.earth.rotation.y = this.yRotation;
     }
 
     // 大气 time
