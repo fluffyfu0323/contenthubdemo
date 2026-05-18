@@ -8,6 +8,7 @@ import { TimelineModule } from './timeline.js';
 import { PanelModule } from './panel.js';
 import { TIME_PERIODS, getPeriodConfig, getCachedAssetsForPeriod } from './data.js';
 import { DeepDiveModule, drawChart } from './deepdive.js';
+import { OverviewMapModule } from './overview-map.js';
 
 class InspirationExplorerPaper {
   constructor() {
@@ -199,12 +200,29 @@ class InspirationExplorerPaper {
     if (viewName === 'explore') {
       this.globe?.resume?.();
       this._ddModule?.pause?.();
+    } else if (viewName === 'overview') {
+      this.globe?.pause?.();
+      this._ddModule?.pause?.();
+      this._initOverviewMap();
     } else if (viewName === 'deepdive') {
       this.globe?.pause?.();
       this._initDeepDive();
     } else {
       this.globe?.pause?.();
       this._ddModule?.pause?.();
+    }
+  }
+
+  /* ===== 全景地图初始化 ===== */
+  _initOverviewMap() {
+    if (!this._overviewMap) {
+      const container = document.getElementById('overviewContainer');
+      if (container) {
+        this._overviewMap = new OverviewMapModule(container);
+        this._overviewMap.init();
+      }
+    } else {
+      this._overviewMap.resize();
     }
   }
 

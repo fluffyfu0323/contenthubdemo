@@ -9,7 +9,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
 
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="css/style.css">
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script type="importmap">
   {
@@ -62,14 +65,10 @@
     <!-- 右侧：信息面板 -->
     <aside class="info-panel" id="infoPanel"></aside>
 
-    <!-- ===== Overview 全景模式（占位） ===== -->
+    <!-- ===== Overview 全景模式：全球文化交流路线地图 ===== -->
     <div class="view-overview-container" id="overviewContainer">
-      <div class="view-placeholder">
-        <div class="view-placeholder-icon">📊</div>
-        <h2 class="view-placeholder-title">全景模式</h2>
-        <p class="view-placeholder-desc">统计仪表盘 · 文化关系网络 · 数据全貌</p>
-        <span class="view-placeholder-badge">即将上线</span>
-      </div>
+      <!-- 地图区域 -->
+      <div class="overview-map-wrap"></div>
     </div>
 
     <!-- ===== Deep Dive 深潜模式 ===== -->
