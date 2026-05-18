@@ -632,6 +632,7 @@ body.scene-entering .globe-status  { opacity: 0; }
   transform: translateY(-1px);
   box-shadow: 0 14px 44px rgba(30,24,20,0.12), 0 1px 0 rgba(255,255,255,0.78) inset;
 }
+.dd-card-clickable { cursor: pointer; }
 
 .dd-card-header {
   display: flex; align-items: center; gap: 6px;
