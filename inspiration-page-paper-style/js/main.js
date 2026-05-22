@@ -21,51 +21,20 @@ class InspirationExplorerPaper {
   }
 
   async init() {
-    const globeContainer = document.getElementById('globeContainer');
-    const timelineContainer = document.getElementById('timelinePanel');
-    const panelContainer = document.getElementById('infoPanel');
     this.loadingEl = document.getElementById('loadingOverlay');
 
-    document.body.classList.add('scene-entering');
-
-    // 1. 时间轴
-    this.timeline = new TimelineModule(timelineContainer);
-    this.timeline.init();
-
-    // 2. 面板
-    this.panel = new PanelModule(panelContainer);
-    this.panel.init();
-
-    // 3. 地球
-    this.globe = new GlobeModule(globeContainer);
-
-    this.globe.onLoadProgress = (percent) => {
-      const textEl = this.loadingEl?.querySelector('.loading-text');
-      if (textEl) textEl.textContent = `加载地球数据… ${percent}%`;
-    };
-
-    this.globe.onLoadComplete = () => {
-      setTimeout(() => {
-        if (this.loadingEl) {
-          this.loadingEl.classList.add('fade-out');
-          setTimeout(() => { this.loadingEl.style.display = 'none'; }, 600);
-        }
-        this._playEntrySequence();
-      }, 200);
-    };
-
-    await this.globe.init();
-
-    // 4. 绑定事件
-    this._bindEvents();
-
-    // 5. 初始化视图切换导航
+    // 1. 初始化视图切换导航
     this._initViewSwitcher();
 
-    // 6. 初始色
-    this._updatePeriodColor(this.timeline.getActivePeriod().color);
+    // 2. 默认进入深潜模式（不加载3D地球）
+    this._switchView('deepdive');
 
-    console.log('[Paper Style] 初始化完成');
+    // 隐藏地球 loading（因为默认不加载地球）
+    if (this.loadingEl) {
+      this.loadingEl.style.display = 'none';
+    }
+
+    console.log('[Paper Style] 初始化完成（默认深潜模式）');
   }
 
   _playEntrySequence() {
@@ -155,7 +124,7 @@ class InspirationExplorerPaper {
 
   /* ===== 视图切换 ===== */
   _initViewSwitcher() {
-    this._currentView = 'explore';
+    this._currentView = null; // 初始为null，确保第一次switchView能执行
     const btns = document.querySelectorAll('.view-btn');
     const glider = document.querySelector('.nav-glider');
     if (!btns.length || !glider) return;
@@ -193,24 +162,66 @@ class InspirationExplorerPaper {
     const layout = document.querySelector('.app-layout');
     layout.classList.remove('view-explore', 'view-overview', 'view-deepdive');
 
-    if (viewName !== 'explore') {
-      layout.classList.add(`view-${viewName}`);
-    }
-
     if (viewName === 'explore') {
+      // 懒加载3D地球
+      this._initExploreGlobe();
       this.globe?.resume?.();
       this._ddModule?.pause?.();
     } else if (viewName === 'overview') {
+      layout.classList.add('view-overview');
       this.globe?.pause?.();
       this._ddModule?.pause?.();
       this._initOverviewMap();
     } else if (viewName === 'deepdive') {
+      layout.classList.add('view-deepdive');
       this.globe?.pause?.();
       this._initDeepDive();
-    } else {
-      this.globe?.pause?.();
-      this._ddModule?.pause?.();
     }
+  }
+
+  /* ===== 懒加载3D地球 ===== */
+  async _initExploreGlobe() {
+    if (this.globe) return; // 已初始化过
+
+    const globeContainer = document.getElementById('globeContainer');
+    const timelineContainer = document.getElementById('timelinePanel');
+    const panelContainer = document.getElementById('infoPanel');
+    this.loadingEl = document.getElementById('loadingOverlay');
+
+    if (this.loadingEl) {
+      this.loadingEl.style.display = '';
+      this.loadingEl.classList.remove('fade-out');
+    }
+
+    // 初始化时间轴
+    this.timeline = new TimelineModule(timelineContainer);
+    this.timeline.init();
+
+    // 初始化面板
+    this.panel = new PanelModule(panelContainer);
+    this.panel.init();
+
+    // 初始化地球
+    this.globe = new GlobeModule(globeContainer);
+
+    this.globe.onLoadProgress = (percent) => {
+      const textEl = this.loadingEl?.querySelector('.loading-text');
+      if (textEl) textEl.textContent = `加载地球数据… ${percent}%`;
+    };
+
+    this.globe.onLoadComplete = () => {
+      setTimeout(() => {
+        if (this.loadingEl) {
+          this.loadingEl.classList.add('fade-out');
+          setTimeout(() => { this.loadingEl.style.display = 'none'; }, 600);
+        }
+        this._playEntrySequence();
+      }, 200);
+    };
+
+    await this.globe.init();
+    this._bindEvents();
+    this._updatePeriodColor(this.timeline.getActivePeriod().color);
   }
 
   /* ===== 全景地图初始化 ===== */
