@@ -55,6 +55,7 @@ export class DeepDiveModule {
     this._createAtmosphere();
     this._createMarkers();
     this._initInteractions();
+    this._initSidebarHover();
     this._initResize();
     this._animate();
   }
@@ -224,18 +225,61 @@ export class DeepDiveModule {
   // 标记点 — 在关键文化位置放置光点
   _createMarkers() {
     const markers = [
-      { lat: 31, lng: 104, name: '三星堆' },       // 四川
-      { lat: 29.3, lng: 117.2, name: '景德镇' },   // 江西
-      { lat: 27.7, lng: 109, name: '傩戏' },       // 贵州
-      { lat: 40.0, lng: 94.8, name: '敦煌' },      // 甘肃敦煌
-      { lat: 35.7, lng: 139.7, name: '浮世绘' },   // 日本东京
-      { lat: 32.7, lng: 53.7, name: '波斯地毯' },  // 伊朗
+      {
+        lat: 31, lng: 104, name: '三星堆',
+        subtitle: '古蜀文明',
+        content: `<strong>部分游戏联动记录：</strong><br>• 2023年 ×《原神》— 战略合作，宣传片《仰观千秋，俯察万象》<br>• 2025年 ×《王者荣耀》— 十周年联动，张艺谋任艺术指导`,
+        highlight: '青铜面具、神树、纵目人像，神秘的东方文明符号',
+        link: '#'
+      },
+      {
+        lat: 29.3, lng: 117.2, name: '景德镇',
+        subtitle: '千年瓷都',
+        content: `<strong>部分游戏联动记录：</strong><br>• 2022年 ×《英雄联盟》— 青花瓷主题皮肤，纪录片《龙韵瓷华》<br>• 2024年 × 腾讯互娱 — 景德镇文旅战略合作签约<br>• 2026年 ×《桃源深处有人家》— 联动御窑博物院「霰雪寻瓷」`,
+        highlight: '青花、粉彩、玲珑瓷，世界制瓷工艺巅峰',
+        link: '#'
+      },
+      {
+        lat: 27.7, lng: 109, name: '傩戏',
+        subtitle: '千年活化石',
+        content: `<strong>部分游戏联动记录：</strong><br>• 2024年 ×《桃源深处有人家》— 贵州傩文化主题联动<br>• 2025年 × 池州傩戏入驻腾讯手游 — 12尊傩面具数字化<br>• 2025年 ×《以闪亮之名》— 非遗傩戏时装联动`,
+        highlight: '驱邪祈福面具、"戏剧活化石"，中国最古老的祭祀表演艺术',
+        link: '#'
+      },
+      {
+        lat: 40.0, lng: 94.8, name: '敦煌',
+        subtitle: '丝路明珠',
+        content: `<strong>部分游戏联动记录：</strong><br>• 2018-2025年 ×《王者荣耀》— 飞天皮肤系列（杨玉环·遇见飞天、瑶·遇见神鹿）<br>• 2023年 × 腾讯 — "数字藏经洞"上线，游戏引擎还原莫高窟<br>• 2025年 × 网易 — 联手敦煌研究院打造沉浸式体验`,
+        highlight: '莫高窟壁画、飞天、藻井纹样，世界最大佛教艺术宝库',
+        link: '#'
+      },
+      {
+        lat: 35.7, lng: 139.7, name: '浮世绘',
+        subtitle: '江户美学',
+        content: `<strong>艺术特征：</strong><br>• 鲜艳平涂色彩 + 大胆构图 + 黑色粗轮廓线<br>• 题材涵盖风景、美人、武士、妖怪<br>• 影响印象派（莫奈、梵高），东西方美学交汇里程碑`,
+        highlight: '游戏设计参考：《大神》《对马岛之魂》《阴阳师》等均运用浮世绘视觉风格',
+        link: '#'
+      },
+      {
+        lat: 32.7, lng: 53.7, name: '波斯地毯',
+        subtitle: '地面上的艺术',
+        content: `<strong>艺术特征：</strong><br>• 纯手工打结编织，单块耗时数年<br>• 图案融合几何纹样、花园意象与阿拉伯书法<br>• 天然植物/矿物染料，千年不褪色`,
+        highlight: '设计灵感：对称与无限延伸的纹样逻辑，适合宫殿、圣殿、魔法阵等场景',
+        link: '#'
+      },
     ];
+
+    // 创建圆形纹理
+    const circleTexture = this._createCircleTexture();
+    const haloTexture = this._createCircleTexture(0.3);
+
+    this._markerSprites = []; // 用于 raycaster 检测
 
     markers.forEach(m => {
       const pos = this._latLngToVec3(m.lat, m.lng, CONFIG.earthRadius + 0.04);
-      // 三层光点
+      // 圆形光点
       const spriteMat = new THREE.SpriteMaterial({
+        map: circleTexture,
         color: 0xd6432f,
         transparent: true,
         opacity: 0.9,
@@ -245,10 +289,13 @@ export class DeepDiveModule {
       const sprite = new THREE.Sprite(spriteMat);
       sprite.position.copy(pos);
       sprite.scale.setScalar(0.6);
+      sprite.userData = { markerData: m }; // 存储卡片数据
       this.earth.add(sprite);
+      this._markerSprites.push(sprite);
 
-      // 光晕
+      // 圆形光晕
       const haloMat = new THREE.SpriteMaterial({
+        map: haloTexture,
         color: 0xd6432f,
         transparent: true,
         opacity: 0.2,
@@ -263,6 +310,225 @@ export class DeepDiveModule {
       if (!this._halos) this._halos = [];
       this._halos.push(halo);
     });
+
+    // 创建 hover 卡片 DOM
+    this._createTooltip();
+    // 初始化 Raycaster hover 检测
+    this._initHoverDetection();
+  }
+
+  // 创建 hover 卡片 DOM
+  _createTooltip() {
+    this._tooltip = document.createElement('div');
+    this._tooltip.className = 'dd-marker-tooltip';
+    this._tooltip.style.display = 'none';
+    this._tooltip.innerHTML = `
+      <div class="dd-tooltip-header">
+        <span class="dd-tooltip-name"></span>
+        <span class="dd-tooltip-subtitle"></span>
+      </div>
+      <div class="dd-tooltip-content"></div>
+      <div class="dd-tooltip-highlight"></div>
+      <a class="dd-tooltip-btn" href="#" target="_blank">查看更多详情 →</a>
+    `;
+    this.container.appendChild(this._tooltip);
+  }
+
+  // 显示卡片
+  _showTooltip(data, screenX, screenY) {
+    const tooltip = this._tooltip;
+    tooltip.querySelector('.dd-tooltip-name').textContent = `📍 ${data.name}`;
+    tooltip.querySelector('.dd-tooltip-subtitle').textContent = `· ${data.subtitle}`;
+    tooltip.querySelector('.dd-tooltip-content').innerHTML = data.content;
+    tooltip.querySelector('.dd-tooltip-highlight').textContent = data.highlight;
+    tooltip.querySelector('.dd-tooltip-btn').href = data.link;
+
+    tooltip.style.display = 'block';
+
+    // 定位卡片（在光点右侧显示，避免遮挡）
+    const rect = this.container.getBoundingClientRect();
+    let left = screenX - rect.left + 20;
+    let top = screenY - rect.top - 60;
+
+    // 边界检测：防止超出容器
+    const tw = tooltip.offsetWidth || 280;
+    const th = tooltip.offsetHeight || 200;
+    if (left + tw > rect.width) left = screenX - rect.left - tw - 20;
+    if (top + th > rect.height) top = rect.height - th - 10;
+    if (top < 10) top = 10;
+
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + 'px';
+  }
+
+  _hideTooltip() {
+    if (this._tooltip) {
+      this._tooltip.style.display = 'none';
+    }
+  }
+
+  // Raycaster hover 检测
+  _initHoverDetection() {
+    this._raycaster = new THREE.Raycaster();
+    this._mouseVec = new THREE.Vector2();
+    this._hoveredMarker = null;
+
+    const el = this.renderer.domElement;
+
+    el.addEventListener('pointermove', (e) => {
+      if (this.isDragging) {
+        this._hideTooltip();
+        return;
+      }
+
+      const rect = el.getBoundingClientRect();
+      this._mouseVec.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      this._mouseVec.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      this._raycaster.setFromCamera(this._mouseVec, this.camera);
+      const intersects = this._raycaster.intersectObjects(this._markerSprites);
+
+      if (intersects.length > 0) {
+        const hit = intersects[0].object;
+        if (this._hoveredMarker !== hit) {
+          this._hoveredMarker = hit;
+          el.style.cursor = 'pointer';
+          this._showTooltip(hit.userData.markerData, e.clientX, e.clientY);
+        }
+      } else {
+        if (this._hoveredMarker) {
+          this._hoveredMarker = null;
+          el.style.cursor = 'grab';
+          this._hideTooltip();
+        }
+      }
+    });
+
+    el.addEventListener('pointerleave', () => {
+      this._hoveredMarker = null;
+      this._hideTooltip();
+    });
+  }
+
+  // 侧边栏卡片 hover —— 复用地球 tooltip
+  _initSidebarHover() {
+    // 文案数据映射（按名称索引）
+    this._cultureData = {
+      '三星堆': {
+        name: '三星堆', subtitle: '古蜀文明',
+        content: `<strong>部分游戏联动记录：</strong><br>• 2023年 ×《原神》— 战略合作，宣传片《仰观千秋，俯察万象》<br>• 2025年 ×《王者荣耀》— 十周年联动，张艺谋任艺术指导`,
+        highlight: '青铜面具、神树、纵目人像，神秘的东方文明符号',
+        link: '#'
+      },
+      '景德镇': {
+        name: '景德镇', subtitle: '千年瓷都',
+        content: `<strong>部分游戏联动记录：</strong><br>• 2022年 ×《英雄联盟》— 青花瓷主题皮肤，纪录片《龙韵瓷华》<br>• 2024年 × 腾讯互娱 — 景德镇文旅战略合作签约<br>• 2026年 ×《桃源深处有人家》— 联动御窑博物院「霰雪寻瓷」`,
+        highlight: '青花、粉彩、玲珑瓷，世界制瓷工艺巅峰',
+        link: '#'
+      },
+      '傩戏': {
+        name: '傩戏', subtitle: '千年活化石',
+        content: `<strong>部分游戏联动记录：</strong><br>• 2024年 ×《桃源深处有人家》— 贵州傩文化主题联动<br>• 2025年 × 池州傩戏入驻腾讯手游 — 12尊傩面具数字化<br>• 2025年 ×《以闪亮之名》— 非遗傩戏时装联动`,
+        highlight: '驱邪祈福面具、"戏剧活化石"，中国最古老的祭祀表演艺术',
+        link: '#'
+      },
+      '敦煌': {
+        name: '敦煌', subtitle: '丝路明珠',
+        content: `<strong>部分游戏联动记录：</strong><br>• 2018-2025年 ×《王者荣耀》— 飞天皮肤系列（杨玉环·遇见飞天、瑶·遇见神鹿）<br>• 2023年 × 腾讯 — "数字藏经洞"上线，游戏引擎还原莫高窟<br>• 2025年 × 网易 — 联手敦煌研究院打造沉浸式体验`,
+        highlight: '莫高窟壁画、飞天、藻井纹样，世界最大佛教艺术宝库',
+        link: '#'
+      },
+      '浮世绘': {
+        name: '浮世绘', subtitle: '江户美学',
+        content: `<strong>艺术特征：</strong><br>• 鲜艳平涂色彩 + 大胆构图 + 黑色粗轮廓线<br>• 题材涵盖风景、美人、武士、妖怪<br>• 影响印象派（莫奈、梵高），东西方美学交汇里程碑`,
+        highlight: '游戏设计参考：《大神》《对马岛之魂》《阴阳师》等均运用浮世绘视觉风格',
+        link: '#'
+      },
+      '波斯地毯': {
+        name: '波斯地毯', subtitle: '地面上的艺术',
+        content: `<strong>艺术特征：</strong><br>• 纯手工打结编织，单块耗时数年<br>• 图案融合几何纹样、花园意象与阿拉伯书法<br>• 天然植物/矿物染料，千年不褪色`,
+        highlight: '设计灵感：对称与无限延伸的纹样逻辑，适合宫殿、圣殿、魔法阵等场景',
+        link: '#'
+      }
+    };
+
+    // 创建侧边栏专用 tooltip（挂载到deepdive容器避免overflow裁剪）
+    this._sidebarTooltip = document.createElement('div');
+    this._sidebarTooltip.className = 'dd-marker-tooltip dd-sidebar-tooltip';
+    this._sidebarTooltip.style.display = 'none';
+    this._sidebarTooltip.innerHTML = `
+      <div class="dd-tooltip-header">
+        <span class="dd-tooltip-name"></span>
+        <span class="dd-tooltip-subtitle"></span>
+      </div>
+      <div class="dd-tooltip-content"></div>
+      <div class="dd-tooltip-highlight"></div>
+      <a class="dd-tooltip-btn" href="#" target="_blank">查看更多详情 →</a>
+    `;
+    document.getElementById('deepdiveContainer')?.appendChild(this._sidebarTooltip);
+
+    // 给所有带 data-culture 的元素绑定 hover
+    const items = document.querySelectorAll('[data-culture]');
+    items.forEach(item => {
+      item.addEventListener('mouseenter', (e) => {
+        const key = item.dataset.culture;
+        const data = this._cultureData[key];
+        if (!data) return;
+
+        const tooltip = this._sidebarTooltip;
+        tooltip.querySelector('.dd-tooltip-name').textContent = `📍 ${data.name}`;
+        tooltip.querySelector('.dd-tooltip-subtitle').textContent = `· ${data.subtitle}`;
+        tooltip.querySelector('.dd-tooltip-content').innerHTML = data.content;
+        tooltip.querySelector('.dd-tooltip-highlight').textContent = data.highlight;
+        tooltip.querySelector('.dd-tooltip-btn').href = data.link;
+
+        // 相对于 deepdive 容器定位
+        const containerRect = document.getElementById('deepdiveContainer').getBoundingClientRect();
+        const itemRect = item.getBoundingClientRect();
+
+        tooltip.style.display = 'block';
+        let left = itemRect.right - containerRect.left + 12;
+        let top = itemRect.top - containerRect.top;
+
+        // 边界检测：如果超出容器底部，向上偏移
+        const th = tooltip.offsetHeight || 220;
+        if (top + th > containerRect.height) {
+          top = containerRect.height - th - 10;
+        }
+        if (top < 10) top = 10;
+
+        tooltip.style.left = left + 'px';
+        tooltip.style.top = top + 'px';
+      });
+
+      item.addEventListener('mouseleave', () => {
+        this._sidebarTooltip.style.display = 'none';
+      });
+    });
+  }
+
+  // 生成圆形渐变纹理
+  _createCircleTexture(softness = 0.6) {
+    const size = 128;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    const center = size / 2;
+    const radius = size / 2;
+
+    const gradient = ctx.createRadialGradient(center, center, 0, center, center, radius);
+    gradient.addColorStop(0, `rgba(255, 255, 255, 1)`);
+    gradient.addColorStop(1 - softness, `rgba(255, 255, 255, 0.8)`);
+    gradient.addColorStop(1, `rgba(255, 255, 255, 0)`);
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, size, size);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    return texture;
   }
 
   _latLngToVec3(lat, lng, r) {
