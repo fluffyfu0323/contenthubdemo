@@ -423,7 +423,7 @@ body.scene-entering .globe-status  { opacity: 0; }
 .globe-container canvas { display: block; width: 100% !important; height: 100% !important; }
 
 .globe-status {
-  position: absolute; bottom: var(--sp-5); left: 50%; transform: translateX(-50%);
+  position: absolute; top: var(--sp-4); left: var(--sp-4); transform: none;
   display: flex; align-items: center; gap: var(--sp-3);
   padding: 8px 20px;
   background: linear-gradient(135deg, rgba(255,252,246,0.52), rgba(236,228,214,0.38), rgba(255,253,248,0.44));

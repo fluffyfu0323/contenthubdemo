@@ -26,15 +26,10 @@ class InspirationExplorerPaper {
     // 1. 初始化视图切换导航
     this._initViewSwitcher();
 
-    // 2. 默认进入深潜模式（不加载3D地球）
-    this._switchView('deepdive');
+    // 2. 默认进入探索模式（加载3D地球）
+    this._switchView('explore');
 
-    // 隐藏地球 loading（因为默认不加载地球）
-    if (this.loadingEl) {
-      this.loadingEl.style.display = 'none';
-    }
-
-    console.log('[Paper Style] 初始化完成（默认深潜模式）');
+    console.log('[Paper Style] 初始化完成（默认探索模式）');
   }
 
   _playEntrySequence() {
