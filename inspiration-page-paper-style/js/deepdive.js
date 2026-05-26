@@ -34,7 +34,7 @@ export class DeepDiveModule {
     this.isAutoRotating = true;
     this.lastInteraction = 0;
     this.mouse = { prevX: 0, prevY: 0 };
-    this.yRotation = -0.8;  // Y轴旋转，初始展示欧亚非
+    this.yRotation = -3.0;  // Y轴旋转，初始展示中国及东南亚
     this.xRotation = 0;     // X轴旋转
     this.earthOffset = new THREE.Vector3(2, -1, 0); // 地球位置靠近中心
 
